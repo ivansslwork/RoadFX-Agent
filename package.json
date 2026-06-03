@@ -1,0 +1,13 @@
+{
+  "name": "arena-agent-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "mkdir -p build-output && cp index.html build-output/index.html",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.19.1"
+  }
+}

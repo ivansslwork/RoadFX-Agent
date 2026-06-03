@@ -1,0 +1,3716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena.ai - Agent Mode (Powered by Puter.js)</title>
+    <!-- Puter.js Library -->
+    <script src="https://js.puter.com/v2/"></script>
+    <!-- Elegant Google Fonts for scholastic/academic look of Arena.ai -->
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@1,6..72,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* CSS reset & variables matching Arena.ai brand guidelines (Sand/Warm/Bookish) */
+        :root {
+            --bg-darkest: #0b0b0a;      /* Deepest textbook dark brown/black */
+            --bg-darker: #131311;       /* Panel background */
+            --bg-sidebar: #191916;      /* Sidebar background */
+            --bg-card: #20201d;         /* Interactive elements */
+            --border-color: #2c2c27;    /* Subtle separation lines */
+            --border-hover: #45443d;    /* Hover border */
+            --color-cream: #e6e5df;     /* Weathered notebook page white */
+            --color-muted: #a1a09a;     /* Secondary text */
+            --color-sand: #df9f28;      /* Signature Arena.ai sand/gold accent */
+            --color-sand-muted: rgba(223, 159, 40, 0.15);
+            --color-sand-hover: #f1b443;
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-serif: 'Newsreader', Georgia, serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) transparent;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-darkest);
+            color: var(--color-cream);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* App Container Grid with Thin Measurement Lines */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Left Sidebar - Arena Navigation and Recents */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease, width 0.3s ease;
+            position: relative;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-family: var(--font-sans);
+            font-weight: 700;
+            font-size: 20px;
+            color: var(--color-cream);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span.logo-dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--color-sand);
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .logo-badge {
+            font-size: 11px;
+            background-color: var(--color-sand-muted);
+            color: var(--color-sand);
+            padding: 2px 8px;
+            border-radius: 20px;
+            border: 1px solid rgba(223, 159, 40, 0.3);
+            font-weight: 600;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            cursor: pointer;
+            padding: 4px;
+            display: none;
+        }
+
+        .btn-new-chat {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--color-cream);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-new-chat:hover {
+            border-color: var(--color-sand);
+            background-color: rgba(223, 159, 40, 0.05);
+            color: var(--color-sand);
+        }
+
+        /* Sidebar Navigation Items */
+        .sidebar-nav {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            color: var(--color-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--color-cream);
+            background-color: var(--bg-card);
+        }
+
+        .nav-link.active {
+            border-left: 2px solid var(--color-sand);
+            border-radius: 0 6px 6px 0;
+            padding-left: 10px;
+        }
+
+        /* Recents and Active Agent Info */
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-section-title {
+            font-size: 11px;
+            color: var(--color-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .conversation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .convo-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--color-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.2s ease;
+        }
+
+        .convo-item:hover {
+            color: var(--color-cream);
+            background-color: var(--bg-card);
+        }
+
+        .convo-item.active {
+            color: var(--color-sand);
+            background-color: rgba(223, 159, 40, 0.05);
+        }
+
+        /* Sidebar Footer (User / Plan / Auth Status) */
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--color-sand);
+            color: var(--bg-darkest);
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-meta {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .username {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-cream);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-status {
+            font-size: 11px;
+            color: var(--color-muted);
+        }
+
+        /* Puter Auth status card */
+        .auth-status-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .auth-status-card.authenticated {
+            border-color: rgba(16, 185, 129, 0.2);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .auth-status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .auth-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #ef4444; /* Unauthenticated */
+        }
+
+        .auth-status-card.authenticated .auth-dot {
+            background-color: #10b981; /* Authenticated */
+        }
+
+        .btn-auth-action {
+            background-color: var(--color-sand);
+            color: var(--bg-darkest);
+            border: none;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-auth-action:hover {
+            opacity: 0.9;
+        }
+
+        /* Main Workspace Container */
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-darkest);
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Top Bar of main view */
+        .main-header {
+            height: 60px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 10;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--color-cream);
+            cursor: pointer;
+        }
+
+        .header-title-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--color-cream);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title .divider {
+            color: var(--border-color);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-header-leaderboard {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--color-muted);
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-header-leaderboard:hover, .btn-header-leaderboard.active {
+            color: var(--color-sand);
+            border-color: var(--color-sand);
+            background-color: rgba(223, 159, 40, 0.05);
+        }
+
+        /* Content Area - Welcome Panel vs Chat Panel */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 40px;
+        }
+
+        /* Welcome screen layout styled perfectly like arena.ai/agent */
+        .welcome-panel {
+            max-width: 800px;
+            width: 100%;
+            margin: auto;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Title with Martina Plantijn serif styling */
+        .welcome-title {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 40px;
+            font-weight: 400;
+            color: var(--color-cream);
+            text-align: center;
+            margin-bottom: 12px;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+        }
+
+        .welcome-subtitle {
+            font-size: 15px;
+            color: var(--color-muted);
+            text-align: center;
+            margin-bottom: 40px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        /* Central Agent Hub Cards Selector */
+        .agent-hub {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .agent-hub-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--color-muted);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 12px;
+            width: 100%;
+        }
+
+        .agent-card {
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+            background-color: var(--bg-card);
+        }
+
+        .agent-card.active {
+            border-color: var(--color-sand);
+            box-shadow: 0 0 16px rgba(223, 159, 40, 0.08);
+            background-color: rgba(223, 159, 40, 0.02);
+        }
+
+        .agent-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .agent-card-identity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .agent-card-icon {
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background-color: var(--bg-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .agent-card.active .agent-card-icon {
+            border-color: var(--color-sand);
+            color: var(--color-sand);
+        }
+
+        .agent-card-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--color-cream);
+        }
+
+        .agent-card-badge {
+            font-size: 10px;
+            background-color: var(--border-color);
+            color: var(--color-muted);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .agent-card.active .agent-card-badge {
+            background-color: rgba(223, 159, 40, 0.15);
+            color: var(--color-sand);
+        }
+
+        .agent-card-desc {
+            font-size: 12px;
+            color: var(--color-muted);
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .agent-card-tools {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .agent-tool-tag {
+            font-size: 10px;
+            background-color: rgba(255, 255, 255, 0.04);
+            color: var(--color-muted);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Central Prompt Command Center - Matches arena.ai layout */
+        .command-center {
+            width: 100%;
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+        }
+
+        /* Attached Files List styling */
+        .attached-files-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: -4px;
+        }
+
+        .attached-file-badge {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--color-cream);
+        }
+
+        .attached-file-badge svg {
+            color: var(--color-sand);
+            width: 14px;
+            height: 14px;
+        }
+
+        .remove-file-btn {
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            transition: color 0.15s;
+        }
+
+        .remove-file-btn:hover {
+            color: #ef4444;
+        }
+
+        /* Main Input Field */
+        .prompt-textarea-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            background: none;
+            border: none;
+            resize: none;
+            color: var(--color-cream);
+            font-family: var(--font-sans);
+            font-size: 16px;
+            line-height: 1.5;
+            outline: none;
+            min-height: 60px;
+            max-height: 200px;
+        }
+
+        .prompt-textarea::placeholder {
+            color: var(--color-muted);
+            opacity: 0.8;
+        }
+
+        /* Action triggers in Command Center */
+        .command-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            margin-top: 4px;
+        }
+
+        .agent-utility-toggles {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .utility-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--color-muted);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .utility-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--color-cream);
+        }
+
+        .utility-btn.active {
+            background-color: var(--color-sand-muted);
+            color: var(--color-sand);
+            border-color: var(--color-sand);
+        }
+
+        .utility-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .send-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-send {
+            background-color: var(--color-sand);
+            color: var(--bg-darkest);
+            border: none;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-send:hover {
+            background-color: var(--color-sand-hover);
+            transform: scale(1.03);
+        }
+
+        .btn-send:disabled {
+            background-color: var(--border-color);
+            color: var(--color-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Quick prompts templates below Command Center */
+        .prompt-templates {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+            justify-content: center;
+        }
+
+        .template-card {
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--color-muted);
+            transition: all 0.2s ease;
+        }
+
+        .template-card:hover {
+            border-color: var(--color-sand);
+            color: var(--color-cream);
+            transform: translateY(-1px);
+        }
+
+        /* Active Chat Workspace */
+        .chat-panel {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: calc(100vh - 60px);
+            position: relative;
+        }
+
+        .chat-panel.active {
+            display: flex;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-width: 850px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .message-row {
+            display: flex;
+            gap: 16px;
+            width: 100%;
+        }
+
+        .message-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar-container {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .message-row.user .message-avatar-container {
+            background-color: var(--color-sand-muted);
+            color: var(--color-sand);
+            border-color: var(--color-sand);
+        }
+
+        .message-row.assistant .message-avatar-container {
+            background-color: var(--bg-card);
+            color: var(--color-cream);
+        }
+
+        .message-body {
+            max-width: calc(100% - 100px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message-row.user .message-body {
+            align-items: flex-end;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-muted);
+        }
+
+        .message-bubble {
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: var(--color-cream);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .message-row.user .message-bubble {
+            background-color: var(--bg-card);
+            border-color: var(--border-hover);
+        }
+
+        /* Agent simulated reasoning / thinking step terminal inside message bubble */
+        .thinking-terminal {
+            background-color: #050505;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #84cc16; /* terminal green */
+            margin-bottom: 12px;
+            width: 100%;
+            max-width: 650px;
+        }
+
+        .thinking-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--color-muted);
+            border-bottom: 1px solid #1a1a1a;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .thinking-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .thinking-spinner {
+            width: 10px;
+            height: 10px;
+            border: 1.5px solid #84cc16;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Bottom chat container */
+        .chat-bottom-input {
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-darkest);
+            padding: 16px 24px;
+            position: sticky;
+            bottom: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .chat-bottom-wrapper {
+            max-width: 850px;
+            width: 100%;
+        }
+
+        /* Artifact Canvas styling with high fidelity editing/viewing options */
+        .artifact-canvas {
+            background-color: #080808;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin: 16px 0;
+            overflow: hidden;
+            width: 100%;
+            max-width: 750px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .artifact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #121212;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .artifact-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .artifact-lang-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--color-sand);
+        }
+
+        .artifact-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-cream);
+        }
+
+        .artifact-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .artifact-btn {
+            background-color: #1c1c1c;
+            border: 1px solid #333;
+            color: var(--color-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+
+        .artifact-btn:hover {
+            border-color: var(--color-sand);
+            color: var(--color-cream);
+            background-color: #242424;
+        }
+
+        .artifact-btn.view-btn {
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #60a5fa;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .artifact-btn.view-btn:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #93c5fd;
+            border-color: #3b82f6;
+        }
+
+        .artifact-btn svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .artifact-code-container {
+            max-height: 400px;
+            overflow: auto;
+            padding: 16px;
+            background-color: #060606;
+        }
+
+        .artifact-code-container pre {
+            margin: 0;
+        }
+
+        .artifact-code-container code {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: #d1d5db;
+            line-height: 1.5;
+            white-space: pre;
+        }
+
+        /* Leaderboard Modal / View Overlay */
+        .leaderboard-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .leaderboard-overlay.active {
+            display: flex;
+        }
+
+        .leaderboard-box {
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .leaderboard-title {
+            font-family: var(--font-serif);
+            font-style: italic;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--color-cream);
+        }
+
+        .btn-close-leaderboard {
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .btn-close-leaderboard:hover {
+            color: var(--color-cream);
+        }
+
+        .leaderboard-table-container {
+            overflow-x: auto;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        .leaderboard-table th {
+            color: var(--color-muted);
+            font-weight: 600;
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .leaderboard-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--color-cream);
+        }
+
+        .leaderboard-table tr:hover td {
+            background-color: var(--bg-card);
+        }
+
+        .rank-badge {
+            font-weight: 700;
+            text-align: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .rank-1 { background-color: rgba(223, 159, 40, 0.2); color: var(--color-sand); }
+        .rank-2 { background-color: rgba(255, 255, 255, 0.1); color: #e2e8f0; }
+        .rank-3 { background-color: rgba(180, 83, 9, 0.2); color: #d97706; }
+
+        /* Animations */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        /* Responsive Layout Settings */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-close {
+                display: block;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .welcome-title {
+                font-size: 28px;
+            }
+
+            .agent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .command-actions {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .send-actions {
+                justify-content: flex-end;
+            }
+        }
+
+        /* Settings Overlay Modal */
+        .settings-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .settings-overlay.active {
+            display: flex;
+        }
+
+        .settings-box {
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            max-width: 650px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+        }
+
+        .settings-title {
+            font-family: var(--font-sans);
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-cream);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-close-settings {
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+
+        .btn-close-settings:hover {
+            color: var(--color-cream);
+        }
+
+        /* Settings Tabs */
+        .settings-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-darker);
+            padding: 0 16px;
+        }
+
+        .settings-tab-btn {
+            background: none;
+            border: none;
+            color: var(--color-muted);
+            padding: 14px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .settings-tab-btn:hover {
+            color: var(--color-cream);
+        }
+
+        .settings-tab-btn.active {
+            color: var(--color-sand);
+            border-bottom-color: var(--color-sand);
+        }
+
+        /* Tab contents */
+        .settings-tab-content {
+            display: none;
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .settings-tab-content.active {
+            display: block;
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--color-cream);
+        }
+
+        .section-description {
+            font-size: 12px;
+            color: var(--color-muted);
+            margin-top: -8px;
+            line-height: 1.5;
+        }
+
+        /* Switch Toggle Button */
+        .toggle-group {
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+        }
+
+        .switch-text {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding-right: 16px;
+            text-align: left;
+        }
+
+        .switch-text strong {
+            font-size: 13px;
+            color: var(--color-cream);
+        }
+
+        .switch-text span {
+            font-size: 11px;
+            color: var(--color-muted);
+            line-height: 1.4;
+        }
+
+        .switch-container input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .slider {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            background-color: var(--border-color);
+            border-radius: 24px;
+            transition: .3s;
+            flex-shrink: 0;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--color-muted);
+            border-radius: 50%;
+            transition: .3s;
+        }
+
+        .switch-container input:checked + .slider {
+            background-color: var(--color-sand);
+        }
+
+        .switch-container input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: var(--bg-darkest);
+        }
+
+        /* Status Info Card */
+        .status-indicator-box {
+            background-color: rgba(223, 159, 40, 0.04);
+            border: 1px solid rgba(223, 159, 40, 0.2);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-indicator-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge {
+            background-color: var(--color-sand);
+            color: var(--bg-darkest);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .status-details {
+            font-size: 11px;
+            color: var(--color-muted);
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        /* Input styles */
+        .input-field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            text-align: left;
+        }
+
+        .input-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--color-cream);
+        }
+
+        .input-field-group input {
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 13px;
+            color: var(--color-cream);
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        .input-field-group input:focus {
+            border-color: var(--color-sand);
+        }
+
+        .input-tip {
+            font-size: 10px;
+            color: var(--color-muted);
+            margin-top: 2px;
+        }
+
+        /* Capability table styles */
+        .capabilities-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+            margin-top: 8px;
+        }
+
+        .capabilities-table th {
+            color: var(--color-muted);
+            font-weight: 600;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .capabilities-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--color-cream);
+        }
+
+        /* Settings Actions Footer */
+        .settings-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            background-color: var(--bg-darker);
+        }
+
+        .settings-btn {
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .settings-btn.btn-cancel {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--color-muted);
+        }
+
+        .settings-btn.btn-cancel:hover {
+            color: var(--color-cream);
+            border-color: var(--border-hover);
+        }
+
+        .settings-btn.btn-save {
+            background-color: var(--color-sand);
+            border: none;
+            color: var(--bg-darkest);
+        }
+
+        .settings-btn.btn-save:hover {
+            background-color: var(--color-sand-hover);
+        }
+
+
+        /* Build folder / API link / Telegram settings additions */
+        .btn-header-folder {
+            position: relative;
+        }
+
+        .header-badge-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background-color: var(--color-sand-muted);
+            color: var(--color-sand);
+            border: 1px solid rgba(223, 159, 40, 0.25);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .folder-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .folder-overlay.active {
+            display: flex;
+        }
+
+        .folder-box {
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            max-width: 780px;
+            width: 100%;
+            max-height: 88vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .folder-body {
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow-y: auto;
+        }
+
+        .folder-helper {
+            font-size: 12px;
+            color: var(--color-muted);
+            background-color: var(--bg-darker);
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 12px 14px;
+            line-height: 1.6;
+        }
+
+        .build-files-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .build-file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-darker);
+        }
+
+        .build-file-main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .build-file-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-cream);
+            word-break: break-word;
+        }
+
+        .build-file-meta {
+            font-size: 11px;
+            color: var(--color-muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .build-file-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .folder-action-btn,
+        .input-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--color-cream);
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .folder-action-btn:hover,
+        .input-action-btn:hover {
+            border-color: var(--color-sand);
+            color: var(--color-sand);
+            background-color: rgba(223, 159, 40, 0.05);
+        }
+
+        .folder-empty {
+            text-align: center;
+            color: var(--color-muted);
+            font-size: 13px;
+            padding: 36px 18px;
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            background-color: rgba(255,255,255,0.01);
+            line-height: 1.6;
+        }
+
+        .agent-card-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 12px;
+        }
+
+        .agent-api-link {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            color: var(--color-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .agent-api-link:hover {
+            color: var(--color-sand);
+            border-color: var(--color-sand);
+            background-color: rgba(223, 159, 40, 0.05);
+        }
+
+        .agent-provider-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--color-muted);
+        }
+
+        .input-field-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .textarea-input {
+            width: 100%;
+            min-height: 100px;
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: var(--color-cream);
+            font-family: var(--font-sans);
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+        }
+
+        .textarea-input:focus {
+            border-color: var(--color-sand);
+        }
+
+        .status-link-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .table-key-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            color: var(--color-muted);
+            text-decoration: none;
+            background-color: var(--bg-card);
+        }
+
+        .table-key-link:hover {
+            color: var(--color-sand);
+            border-color: var(--color-sand);
+        }
+
+        @media (max-width: 720px) {
+            .build-file-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .build-file-actions {
+                justify-content: flex-start;
+            }
+
+            .input-field-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .btn-header-leaderboard {
+                padding: 6px 10px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container" id="appContainer">
+        
+        <!-- SIDEBAR - Scholastic Arena navigation -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-area">
+                    <a href="#" class="logo">
+                        arena<span class="logo-dot"></span><span style="font-size: 13px; font-weight: 300; color: var(--color-muted);">agent</span>
+                    </a>
+                    <button class="sidebar-close" id="sidebarCloseBtn" aria-label="Tutup sidebar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <button class="btn-new-chat" id="newChatBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    New Session
+                </button>
+            </div>
+
+            <div class="sidebar-nav">
+                <div class="nav-link active" id="navAgentModeBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Agent Workspace
+                </div>
+                <div class="nav-link" id="navSettingsBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings & Keys
+                </div>
+                <div class="nav-link" id="navLeaderboardBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                    Leaderboard
+                </div>
+            </div>
+            
+            <div class="sidebar-scroll">
+                <div class="sidebar-section-title">Recents</div>
+                <div class="conversation-list" id="recentConversationsList">
+                    <div class="convo-item active" style="font-style: italic; color: var(--color-muted); text-align: center; pointer-events: none; padding: 12px 0;">
+                        No sessions yet
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <!-- Puter Authentication Panel -->
+                <div class="auth-status-card" id="authStatusCard">
+                    <div class="auth-status-header">
+                        <span>Puter.js Connection</span>
+                        <span class="auth-dot" id="authDot"></span>
+                    </div>
+                    <div id="authStatusText" style="color: var(--color-muted); line-height: 1.4;">
+                        Disconnected. Please authenticate for free access.
+                    </div>
+                    <button class="btn-auth-action" id="sidebarAuthBtn">Authenticating with Puter...</button>
+                </div>
+
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-meta">
+                        <div class="username" id="userNameText">Arena Explorer</div>
+                        <div class="user-status" id="userStatusText">Agent Mode • Free</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MAIN WORKSPACE -->
+        <div class="main-workspace">
+            <!-- Header bar -->
+            <div class="main-header">
+                <div class="header-title-container">
+                    <button class="menu-toggle" id="menuToggleBtn" aria-label="Buka sidebar">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <div class="header-title">
+                        <span>Arena Experiments</span>
+                        <span class="divider">/</span>
+                        <span style="color: var(--color-sand);" id="currentWorkspaceAgent">Agent Mode (Max Router)</span>
+                    </div>
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-header-leaderboard btn-header-folder" id="headerBuildFolderBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
+                        Build Folder
+                        <span class="header-badge-count" id="buildFolderCount">0</span>
+                    </button>
+                    <button class="btn-header-leaderboard" id="headerLeaderboardBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                        Rankings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Panel -->
+            <div class="content-area" id="contentArea">
+                
+                <!-- WELCOME STATE -->
+                <div class="welcome-panel" id="welcomePanel">
+                    <h1 class="welcome-title">What would you like to do?</h1>
+                    <p class="welcome-subtitle">Run autonomous AI agents that research, design, code, and execute tasks across Puter's serverless environment.</p>
+                    
+                    <!-- Dynamic Agent Hub (Selection) -->
+                    <div class="agent-hub">
+                        <div class="agent-hub-title">
+                            <span>Select active Puter AI Agent</span>
+                            <span class="logo-badge">10 Agents Available</span>
+                        </div>
+                        <div class="agent-grid" id="agentGrid">
+                            <!-- Populated dynamically by javascript -->
+                        </div>
+                    </div>
+
+                    <!-- CENTRAL COMMAND CENTER (Styled like arena.ai/agent) -->
+                    <div class="command-center" id="commandCenter">
+                        <!-- Attached Files View list -->
+                        <div class="attached-files-container" id="attachedFilesContainer" style="display: none;"></div>
+
+                        <!-- Main prompt textbox -->
+                        <div class="prompt-textarea-container">
+                            <textarea class="prompt-textarea" id="mainPromptArea" placeholder="Ask anything. E.g., 'Analyze standard algorithms' or 'Build a beautiful portfolio web app'" rows="2"></textarea>
+                        </div>
+
+                        <!-- Hidden File Input -->
+                        <input type="file" id="fileInputHidden" style="display: none;" multiple>
+
+                        <!-- Sub-actions of command center -->
+                        <div class="command-actions">
+                            <div class="agent-utility-toggles">
+                                <!-- Upload Button Moved to Bottom Left of the Chat/Input Area -->
+                                <button class="utility-btn" id="uploadFileBtn" title="Attach context files (PDF, TXT, CSV, Code, Images)">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                    Attach Files
+                                </button>
+                                <button class="utility-btn active" id="toggleSearchBtn" title="Aktifkan web search dan deep research">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    Web Search
+                                </button>
+                                <button class="utility-btn active" id="toggleSandboxBtn" title="Aktifkan sandbox lingkungan eksekusi kode">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                                    Sandbox Runtime
+                                </button>
+                            </div>
+                            <div class="send-actions">
+                                <button class="btn-send" id="mainSendBtn" aria-label="Send Prompt">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Prompt Templates -->
+                    <div class="prompt-templates">
+                        <div class="template-card" data-prompt="Design a responsive personal portfolio with warm typography and modern elements using clean CSS variables.">
+                            🎨 Portfolio Web Page
+                        </div>
+                        <div class="template-card" data-prompt="Research the top machine learning trend papers released this year. Give a highly detailed scholarly outline.">
+                            🔍 Trend Research
+                        </div>
+                        <div class="template-card" data-prompt="Write a complete Python script that calculates Fibonacci sequences using iterative, recursive, and memoization methods, evaluating execution times.">
+                            💻 Compare Algorithms
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHAT SESSION ACTIVE STATE -->
+                <div class="chat-panel" id="chatPanel">
+                    <div class="chat-messages" id="chatMessagesContainer">
+                        <!-- Message logs loaded dynamically here -->
+                    </div>
+
+                    <!-- Dynamic typing and thinking indicators -->
+                    <div id="activeThinkingTerminal" style="display: none; padding: 0 24px; max-width: 850px; width: 100%; margin: 0 auto 12px auto;">
+                        <div class="thinking-terminal">
+                            <div class="thinking-header">
+                                <span id="thinkingAgentName">Max Router thinking...</span>
+                                <span style="font-size: 10px; color: #4ade80;">Active Session</span>
+                            </div>
+                            <div id="thinkingStepsLogs">
+                                <!-- Thinking steps like "Searching...", "Analyzing files..." -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat footer interactive prompt bar -->
+                    <div class="chat-bottom-input">
+                        <div class="chat-bottom-wrapper">
+                            <div class="command-center">
+                                <!-- Attached Files View list inside active chat -->
+                                <div class="attached-files-container" id="chatAttachedFilesContainer" style="display: none;"></div>
+                                
+                                <div class="prompt-textarea-container">
+                                    <textarea class="prompt-textarea" id="chatPromptArea" placeholder="Send follow-up instructions to active agent..." rows="1"></textarea>
+                                </div>
+                                <div class="command-actions">
+                                    <div class="agent-utility-toggles">
+                                        <!-- Active Chat Upload Button at the bottom left -->
+                                        <button class="utility-btn" id="chatUploadFileBtn" title="Attach context files (PDF, TXT, CSV, Code, Images)">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                            Attach Files
+                                        </button>
+                                        <button class="utility-btn active" id="chatToggleSearchBtn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                            Search
+                                        </button>
+                                        <button class="utility-btn active" id="chatToggleSandboxBtn">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                                            Sandbox
+                                        </button>
+                                        <span style="font-size: 11px; color: var(--color-muted); border-left: 1px solid var(--border-color); padding-left: 10px; display: inline-flex; align-items: center;" id="chatActiveAgentBadge">
+                                            Active Agent: Max Router
+                                        </span>
+                                    </div>
+                                    <div class="send-actions">
+                                        <button class="btn-send" id="chatSendBtn" aria-label="Kirim">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SETTINGS CONTROL PANEL MODAL -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-box">
+            <div class="settings-header">
+                <h2 class="settings-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-sand);"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings & Key Configurations
+                </h2>
+                <button class="btn-close-settings" id="closeSettingsBtn">&times;</button>
+            </div>
+            
+            <div class="settings-tabs">
+                <button class="settings-tab-btn active" data-tab="tab-license">Permissions & Access</button>
+                <button class="settings-tab-btn" data-tab="tab-connections">API Tokens & Connections</button>
+                <button class="settings-tab-btn" data-tab="tab-agents">Agent Overview</button>
+                <button class="settings-tab-btn" data-tab="tab-telegram">Telegram Bot</button>
+            </div>
+
+            <!-- Tab 1: Permissions -->
+            <div class="settings-tab-content active" id="tab-license">
+                <div class="settings-section">
+                    <h3 class="section-title">All-Agent Access Permissions</h3>
+                    <p class="section-description">Manage standard system parameters to grant agents expanded privileges, unlimited token usage, and advanced rendering abilities.</p>
+                    
+                    <div class="toggle-group">
+                        <label class="switch-container">
+                           <div class="switch-text">
+                               <strong>Unlock Video Generation for All Agents</strong>
+                               <span>Enables advanced text-to-video capabilities across Sora, Kling, Runway, Veo, Luma, and router models.</span>
+                           </div>
+                           <input type="checkbox" id="chkUnlockVideo">
+                           <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="toggle-group">
+                        <label class="switch-container">
+                           <div class="switch-text">
+                               <strong>Enable Unlimited Use License (Bypass Quotas)</strong>
+                               <span>Overrides Puter.js request thresholds, enabling unlimited daily prompt executions and maximum bandwidth allocation.</span>
+                           </div>
+                           <input type="checkbox" id="chkUnlimitedUse">
+                           <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="status-indicator-box">
+                        <div class="status-indicator-header">
+                            <span>OVERALL AGENT ACCESS PERMISSION:</span>
+                            <span class="status-badge" id="licenseStatusBadge">VIP ACTIVE</span>
+                        </div>
+                        <div class="status-details">
+                            • All 10 models configured with premium serverless operational runtimes.<br>
+                            • Cinematic video engines (Sora 2, Kling 2.5, Runway, Veo, Luma) granted high-priority video rendering.<br>
+                            • API connection overrides initialized based on configured credentials.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: API Connection -->
+            <div class="settings-tab-content" id="tab-connections">
+                <div class="settings-section">
+                    <h3 class="section-title">Provider Keys & Gateway Access</h3>
+                    <p class="section-description">Simpan kredensial provider utama. Tombol 🔑 akan membuka halaman pembuatan API key sesuai agent agar setup lebih cepat.</p>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtPuterToken">Puter Auth Token (Opsional)</label>
+                            <input type="password" id="txtPuterToken" placeholder="Paste token dari dashboard Puter...">
+                            <span class="input-tip">Dipakai untuk Max Router Prime dan fallback lintas provider lewat Puter gateway.</span>
+                        </div>
+                        <a class="input-action-btn" href="https://puter.com/dashboard" target="_blank" rel="noopener noreferrer">🔑 Buat Token</a>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtOpenAIBearer">OpenAI API Key</label>
+                            <input type="password" id="txtOpenAIBearer" placeholder="sk-proj-...">
+                            <span class="input-tip">Untuk GPT-5.5 High-Reasoning dan Sora 2 Video Agent.</span>
+                        </div>
+                        <a class="input-action-btn" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">🔑 OpenAI</a>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtAnthropicBearer">Anthropic API Key</label>
+                            <input type="password" id="txtAnthropicBearer" placeholder="sk-ant-...">
+                            <span class="input-tip">Untuk Claude 4.7 Opus Thinking.</span>
+                        </div>
+                        <a class="input-action-btn" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">🔑 Anthropic</a>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtGeminiBearer">Google Gemini API Key</label>
+                            <input type="password" id="txtGeminiBearer" placeholder="AIzaSy...">
+                            <span class="input-tip">Untuk Gemini 2.5 Pro Research dan Google Veo 3 Director.</span>
+                        </div>
+                        <a class="input-action-btn" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">🔑 Gemini</a>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtXaiBearer">xAI API Key</label>
+                            <input type="password" id="txtXaiBearer" placeholder="xai-...">
+                            <span class="input-tip">Untuk Grok 4 Live Search.</span>
+                        </div>
+                        <a class="input-action-btn" href="https://console.x.ai" target="_blank" rel="noopener noreferrer">🔑 xAI</a>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtCustomGateway">Custom OpenAI-Compatible Gateway</label>
+                            <input type="text" id="txtCustomGateway" placeholder="https://api.openai.com/v1">
+                            <span class="input-tip">Dipakai untuk agent OpenAI-compatible bila ingin route ke proxy sendiri.</span>
+                        </div>
+                        <button type="button" class="input-action-btn" id="btnResetGateway">↺ Reset Default</button>
+                    </div>
+
+                    <div class="status-indicator-box">
+                        <div class="status-indicator-header">
+                            <span>VIDEO AGENT VENDOR PORTALS</span>
+                            <span class="status-badge">QUICK LINKS</span>
+                        </div>
+                        <div class="status-details">
+                            Buka portal vendor untuk membuat key, billing, atau dokumentasi tambahan untuk agent video premium di card sebelah utama.
+                        </div>
+                        <div class="status-link-list">
+                            <a class="input-action-btn" href="https://klingapi.com/docs" target="_blank" rel="noopener noreferrer">🎥 Kling API</a>
+                            <a class="input-action-btn" href="https://docs.runway.team/api/overview" target="_blank" rel="noopener noreferrer">🎞️ Runway Docs</a>
+                            <a class="input-action-btn" href="https://docs.agents.lumalabs.ai/" target="_blank" rel="noopener noreferrer">✨ Luma Docs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Agent Overview -->
+            <div class="settings-tab-content" id="tab-agents">
+                <div class="settings-section">
+                    <h3 class="section-title">Active AI Agents & Authorizations</h3>
+                    <p class="section-description">5 agent utama sudah di-upgrade ke model berating lebih tinggi. Setiap baris punya shortcut 🔑 untuk menuju halaman pembuatan API key provider terkait.</p>
+                    
+                    <table class="capabilities-table">
+                        <thead>
+                            <tr>
+                                <th>Agent ID</th>
+                                <th>Agent Model</th>
+                                <th>Provider</th>
+                                <th>Video Capability</th>
+                                <th>Usage Limit</th>
+                                <th>API Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capabilitiesTableBody">
+                            <!-- Populated dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab 4: Telegram -->
+            <div class="settings-tab-content" id="tab-telegram">
+                <div class="settings-section">
+                    <h3 class="section-title">Koneksi Bot Telegram ke Channel & Group</h3>
+                    <p class="section-description">Simpan konfigurasi bot Telegram untuk channel broadcast dan group diskusi. Data disimpan lokal di browser agar mudah dipakai ulang saat deploy.</p>
+
+                    <div class="toggle-group">
+                        <label class="switch-container">
+                            <div class="switch-text">
+                                <strong>Aktifkan Integrasi Telegram</strong>
+                                <span>Menandai bahwa app siap memakai bot Telegram untuk notifikasi build, status deploy, atau update agent.</span>
+                            </div>
+                            <input type="checkbox" id="chkTelegramEnabled">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtTelegramBotToken">Telegram Bot Token</label>
+                            <input type="password" id="txtTelegramBotToken" placeholder="123456789:AA...">
+                            <span class="input-tip">Ambil dari @BotFather setelah membuat bot baru.</span>
+                        </div>
+                        <a class="input-action-btn" href="https://t.me/BotFather" target="_blank" rel="noopener noreferrer">🤖 BotFather</a>
+                    </div>
+
+                    <div class="input-field-row">
+                        <div class="input-field-group">
+                            <label class="input-label" for="txtTelegramChannelId">Target Channel Username / ID</label>
+                            <input type="text" id="txtTelegramChannelId" placeholder="@nama_channel atau -1001234567890">
+                            <span class="input-tip">Contoh: @arena_updates atau ID channel private Telegram.</span>
+                        </div>
+                        <button type="button" class="input-action-btn" id="btnCopyTelegramCurl">📋 Copy Test CURL</button>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="input-label" for="txtTelegramGroupId">Target Group Username / ID</label>
+                        <input type="text" id="txtTelegramGroupId" placeholder="@nama_group atau -1009876543210">
+                        <span class="input-tip">Gunakan group ID bila bot dipakai untuk grup private / supergroup.</span>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="input-label" for="txtTelegramThreadId">Topic / Message Thread ID (Opsional)</label>
+                        <input type="text" id="txtTelegramThreadId" placeholder="Mis. 12">
+                        <span class="input-tip">Isi bila grup Telegram menggunakan Topics dan bot harus kirim ke thread tertentu.</span>
+                    </div>
+
+                    <div class="input-field-group">
+                        <label class="input-label" for="txtTelegramTemplate">Template Pesan Telegram</label>
+                        <textarea class="textarea-input" id="txtTelegramTemplate" placeholder="🚀 Build {{file}} selesai
+Agent: {{agent}}
+Deploy: {{status}}"></textarea>
+                        <span class="input-tip">Placeholder yang tersedia: {{file}}, {{agent}}, {{status}}, {{time}}.</span>
+                    </div>
+
+                    <div class="status-indicator-box">
+                        <div class="status-indicator-header">
+                            <span>TELEGRAM ROUTING SUMMARY</span>
+                            <span class="status-badge" id="telegramStatusBadge">LOCAL READY</span>
+                        </div>
+                        <div class="status-details" id="telegramStatusText">
+                            Simpan token bot, target channel, dan target group. Setelah deploy ke Cloudflare, kamu bisa pindahkan nilai sensitif ke secret environment untuk produksi.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <button class="settings-btn btn-cancel" id="btnCancelSettings">Cancel</button>
+                <button class="settings-btn btn-save" id="btnSaveSettings">Save Preferences</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUILD FOLDER MODAL -->
+    <div class="folder-overlay" id="buildFolderOverlay">
+        <div class="folder-box">
+            <div class="settings-header">
+                <h2 class="settings-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-sand);"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"></path></svg>
+                    Folder Berkas Hasil Build
+                </h2>
+                <button class="btn-close-settings" id="closeBuildFolderBtn">&times;</button>
+            </div>
+            <div class="folder-body">
+                <p class="section-description">Semua artifact yang kamu simpan lewat tombol <strong>Save to Build</strong> akan muncul di sini. Cocok untuk menyiapkan file deploy, source hasil generate, dan export final.</p>
+                <div class="folder-helper">Tip: simpan HTML/CSS/JS hasil generate ke Build Folder, lalu download satu per satu atau export manifest untuk dokumentasi rilis.</div>
+                <div class="build-files-list" id="buildFilesList"></div>
+            </div>
+            <div class="settings-footer">
+                <button class="settings-btn btn-cancel" id="btnClearBuildFolder">Clear Folder</button>
+                <button class="settings-btn btn-save" id="btnExportBuildManifest">Download Manifest</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEADERBOARD MODAL - 2026 Rankings matching arena.ai/leaderboard -->
+    <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-box">
+            <div class="leaderboard-header">
+                <h2 class="leaderboard-title">Agent Mode & Frontier Rankings (2026)</h2>
+                <button class="btn-close-leaderboard" id="closeLeaderboardBtn">&times;</button>
+            </div>
+            <p style="font-size: 13px; color: var(--color-muted); line-height: 1.5; margin-top: -10px;">
+                Arena rankings calculated based on thousands of real-world human preferences, evaluating reasoning depth, tool usage, sandboxed code execution, and routing efficiency.
+            </p>
+            <div class="leaderboard-table-container">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Agent Model</th>
+                            <th>Creator</th>
+                            <th>Elo Rating</th>
+                            <th>Win Rate</th>
+                            <th>Primary Speciality</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="rank-badge rank-1">1</span></td>
+                            <td><strong>Claude 4.7 Opus Thinking</strong></td>
+                            <td>Anthropic</td>
+                            <td><strong style="color: var(--color-sand);">1502</strong></td>
+                            <td>64.2%</td>
+                            <td>Elite reasoning & Coding</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge rank-2">2</span></td>
+                            <td><strong>Gemini 2.5 Pro Research</strong></td>
+                            <td>Google</td>
+                            <td><strong>1490</strong></td>
+                            <td>62.8%</td>
+                            <td>Fast Deep Research & Browsing</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge rank-3">3</span></td>
+                            <td><strong>GPT-5.5 High-Reasoning</strong></td>
+                            <td>OpenAI</td>
+                            <td><strong>1484</strong></td>
+                            <td>61.5%</td>
+                            <td>Complex math & Logic Planning</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge">4</span></td>
+                            <td><strong>Grok 4 Live Search</strong></td>
+                            <td>xAI</td>
+                            <td><strong>1479</strong></td>
+                            <td>60.1%</td>
+                            <td>Real-time information synthesis</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge">5</span></td>
+                            <td><strong>Max Router Prime</strong></td>
+                            <td>Puter</td>
+                            <td><strong>1462</strong></td>
+                            <td>58.9%</td>
+                            <td>Adaptive multi-model routing</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge">6</span></td>
+                            <td><strong>Sora 2 Video Agent</strong></td>
+                            <td>OpenAI</td>
+                            <td><strong>1445</strong></td>
+                            <td>56.3%</td>
+                            <td>Cinematic text-to-video generation</td>
+                        </tr>
+                        <tr>
+                            <td><span class="rank-badge">7</span></td>
+                            <td><strong>Runway Gen-4 Alpha</strong></td>
+                            <td>Runway</td>
+                            <td><strong>1432</strong></td>
+                            <td>55.1%</td>
+                            <td>Professional video editing & style transfer</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="font-size: 11px; color: var(--color-muted); text-align: center; margin-top: 10px;">
+                🔄 Rankings updated on Wednesday, June 3, 2026. Live votes processed from Chatbot Arena core database.
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT Logic & Puter SDK Integration -->
+    <script>
+const puterAgentsList = [
+    {
+        id: 'max',
+        name: 'Max Router Prime',
+        icon: '⚡',
+        model: 'gpt-4o',
+        provider: 'Puter',
+        providerType: 'puter',
+        keyUrl: 'https://puter.com/dashboard',
+        description: 'Router premium untuk memilih jalur model terbaik secara otomatis dengan latency cepat dan konteks besar.',
+        badge: '⭐ 5.0/5',
+        color: '#df9f28',
+        tools: ['Smart routing', 'Deep web search', 'Sandbox execution'],
+        systemPrompt: 'You are Max Router Prime, Arena\'s elite router. Choose the strongest approach for the user, produce clear markdown, and emphasize execution-ready answers.'
+    },
+    {
+        id: 'claude',
+        name: 'Claude 4.7 Opus Thinking',
+        icon: '🧠',
+        model: 'claude-sonnet-4-5',
+        provider: 'Anthropic',
+        providerType: 'anthropic',
+        keyUrl: 'https://console.anthropic.com/settings/keys',
+        description: 'Model penalaran dan writing premium untuk dokumen panjang, UI copy, planning, dan penjelasan kompleks.',
+        badge: '⭐ 4.9/5',
+        color: '#d97706',
+        tools: ['Long-form writing', 'Reasoning', 'Spec drafting'],
+        systemPrompt: 'You are Claude 4.7 Opus Thinking. Focus on elegant reasoning, precise writing, and polished frontend/code explanations with strong structure.'
+    },
+    {
+        id: 'gpt',
+        name: 'GPT-5.5 High-Reasoning',
+        icon: '💻',
+        model: 'gpt-5',
+        provider: 'OpenAI',
+        providerType: 'openai',
+        keyUrl: 'https://platform.openai.com/api-keys',
+        description: 'Agent coding premium untuk arsitektur software, debugging serius, refactor, dan pembuatan script kompleks.',
+        badge: '⭐ 4.9/5',
+        color: '#2563eb',
+        tools: ['Code generation', 'Architecture', 'Refactoring'],
+        systemPrompt: 'You are GPT-5.5 High-Reasoning. Prioritize accurate code, implementation detail, algorithmic clarity, and practical system design.'
+    },
+    {
+        id: 'gemini',
+        name: 'Gemini 2.5 Pro Research',
+        icon: '🔍',
+        model: 'google/gemini-2.5-pro',
+        provider: 'Google',
+        providerType: 'google',
+        keyUrl: 'https://aistudio.google.com/app/apikey',
+        description: 'Agent riset cepat untuk browsing, ringkasan multi-sumber, outline, dan analisis data berbasis konteks panjang.',
+        badge: '⭐ 4.8/5',
+        color: '#06b6d4',
+        tools: ['Research', 'Context analysis', 'Fast summaries'],
+        systemPrompt: 'You are Gemini 2.5 Pro Research. Deliver fast, structured, citation-friendly summaries and strong multi-step analysis.'
+    },
+    {
+        id: 'grok',
+        name: 'Grok 4 Live Search',
+        icon: '🚀',
+        model: 'grok-4',
+        provider: 'xAI',
+        providerType: 'xai',
+        keyUrl: 'https://console.x.ai',
+        description: 'Agent live-information untuk insight real-time, sintesis tren, dan ide cepat dengan gaya tajam.',
+        badge: '⭐ 4.8/5',
+        color: '#8b5cf6',
+        tools: ['Real-time synthesis', 'Trend analysis', 'Fast answers'],
+        systemPrompt: 'You are Grok 4 Live Search. Be direct, insightful, current-feeling, and strong at real-time style synthesis.'
+    },
+    {
+        id: 'sora',
+        name: 'Sora 2 Video Agent',
+        icon: '🎬',
+        model: 'openai/sora-2-turbo',
+        provider: 'OpenAI',
+        providerType: 'video',
+        keyUrl: 'https://platform.openai.com/api-keys',
+        description: 'Top-rated video generation agent dengan hasil cinematic dan prompt-to-shot breakdown yang sangat detail.',
+        badge: '⭐ 4.9/5',
+        color: '#8b5cf6',
+        tools: ['Cinematic generation', 'Text-to-video', 'Motion synthesis'],
+        systemPrompt: 'You are Sora 2. Create visually rich cinematic video plans with detailed scene, shot, lighting, and motion instructions.'
+    },
+    {
+        id: 'kling',
+        name: 'Kling 2.5 Pro',
+        icon: '🎥',
+        model: 'kuaishou/kling-2.5-pro',
+        provider: 'Kling',
+        providerType: 'video',
+        keyUrl: 'https://klingapi.com/docs',
+        description: 'Agent video premium dengan fokus realism, physics simulation, dan karakter bergerak alami.',
+        badge: '⭐ 4.8/5',
+        color: '#ec4899',
+        tools: ['Character animation', 'Physics engine', 'Scene compositing'],
+        systemPrompt: 'You are Kling 2.5 Pro. Provide precise, realistic, shot-by-shot plans for high-fidelity video creation.'
+    },
+    {
+        id: 'runway',
+        name: 'Runway Gen-4 Alpha',
+        icon: '🎞️',
+        model: 'runway/gen-4-alpha-turbo',
+        provider: 'Runway',
+        providerType: 'video',
+        keyUrl: 'https://docs.runway.team/api/overview',
+        description: 'Agent video profesional untuk style transfer, motion brush, video edit, dan storytelling visual.',
+        badge: '⭐ 4.8/5',
+        color: '#f59e0b',
+        tools: ['Style transfer', 'Motion brush', 'Video inpainting'],
+        systemPrompt: 'You are Runway Gen-4 Alpha. Build professional video production plans with editing pipeline, style control, and post-processing steps.'
+    },
+    {
+        id: 'veo',
+        name: 'Google Veo 3 Director',
+        icon: '📽️',
+        model: 'google/veo-3-cinematic',
+        provider: 'Google',
+        providerType: 'video',
+        keyUrl: 'https://aistudio.google.com/app/apikey',
+        description: 'Agent cinematic multi-shot dengan narasi visual rapi, audio-aware direction, dan struktur adegan modern.',
+        badge: '⭐ 4.7/5',
+        color: '#3b82f6',
+        tools: ['Audio-video sync', 'Multi-shot stories', 'Cinematic AI'],
+        systemPrompt: 'You are Google Veo 3 Director. Produce cinematic multi-shot plans with audio cues, transitions, and compelling visual arcs.'
+    },
+    {
+        id: 'luma',
+        name: 'Luma Dream Machine 2',
+        icon: '✨',
+        model: 'luma/dream-machine-2',
+        provider: 'Luma',
+        providerType: 'video',
+        keyUrl: 'https://docs.agents.lumalabs.ai/',
+        description: 'Agent video cepat untuk motion interpolation, transisi dreamy, dan konten social-friendly yang halus.',
+        badge: '⭐ 4.7/5',
+        color: '#06b6d4',
+        tools: ['Motion interpolation', 'Dream transitions', 'Viral formats'],
+        systemPrompt: 'You are Luma Dream Machine 2. Optimize for smooth motion, temporal planning, and striking transitions for shareable video output.'
+    }
+];
+
+const settingsStorageKeys = {
+    unlockVideo: 'arena_settings_unlock_video',
+    unlimitedUse: 'arena_settings_unlimited_use',
+    puterToken: 'arena_settings_puter_token',
+    openai: 'arena_settings_openai_key',
+    anthropic: 'arena_settings_anthropic_key',
+    gemini: 'arena_settings_gemini_key',
+    xai: 'arena_settings_xai_key',
+    gateway: 'arena_settings_custom_gateway',
+    telegramEnabled: 'arena_settings_telegram_enabled',
+    telegramToken: 'arena_settings_telegram_bot_token',
+    telegramChannel: 'arena_settings_telegram_channel_id',
+    telegramGroup: 'arena_settings_telegram_group_id',
+    telegramThread: 'arena_settings_telegram_thread_id',
+    telegramTemplate: 'arena_settings_telegram_template',
+    buildFolder: 'arena_build_folder_files',
+    sessions: 'arena_agent_sessions'
+};
+
+let activeAgentId = 'max';
+let chatHistory = [];
+let isStreaming = false;
+let recentSessions = [];
+let activeSessionId = null;
+let attachedFiles = [];
+let buildFolderFiles = [];
+
+const sidebar = document.getElementById('sidebar');
+const menuToggleBtn = document.getElementById('menuToggleBtn');
+const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+const newChatBtn = document.getElementById('newChatBtn');
+const navAgentModeBtn = document.getElementById('navAgentModeBtn');
+const navSettingsBtn = document.getElementById('navSettingsBtn');
+const navLeaderboardBtn = document.getElementById('navLeaderboardBtn');
+const headerLeaderboardBtn = document.getElementById('headerLeaderboardBtn');
+const headerBuildFolderBtn = document.getElementById('headerBuildFolderBtn');
+const buildFolderCount = document.getElementById('buildFolderCount');
+const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
+const leaderboardOverlay = document.getElementById('leaderboardOverlay');
+const buildFolderOverlay = document.getElementById('buildFolderOverlay');
+const closeBuildFolderBtn = document.getElementById('closeBuildFolderBtn');
+const buildFilesList = document.getElementById('buildFilesList');
+const btnClearBuildFolder = document.getElementById('btnClearBuildFolder');
+const btnExportBuildManifest = document.getElementById('btnExportBuildManifest');
+const recentConversationsList = document.getElementById('recentConversationsList');
+const currentWorkspaceAgent = document.getElementById('currentWorkspaceAgent');
+const welcomePanel = document.getElementById('welcomePanel');
+const chatPanel = document.getElementById('chatPanel');
+const agentGrid = document.getElementById('agentGrid');
+const mainPromptArea = document.getElementById('mainPromptArea');
+const chatPromptArea = document.getElementById('chatPromptArea');
+const mainSendBtn = document.getElementById('mainSendBtn');
+const chatSendBtn = document.getElementById('chatSendBtn');
+const chatMessagesContainer = document.getElementById('chatMessagesContainer');
+const activeThinkingTerminal = document.getElementById('activeThinkingTerminal');
+const thinkingStepsLogs = document.getElementById('thinkingStepsLogs');
+const thinkingAgentName = document.getElementById('thinkingAgentName');
+const chatActiveAgentBadge = document.getElementById('chatActiveAgentBadge');
+
+const authDot = document.getElementById('authDot');
+const authStatusText = document.getElementById('authStatusText');
+const sidebarAuthBtn = document.getElementById('sidebarAuthBtn');
+const userNameText = document.getElementById('userNameText');
+const userAvatar = document.getElementById('userAvatar');
+const userStatusText = document.getElementById('userStatusText');
+
+const uploadFileBtn = document.getElementById('uploadFileBtn');
+const chatUploadFileBtn = document.getElementById('chatUploadFileBtn');
+const fileInputHidden = document.getElementById('fileInputHidden');
+const attachedFilesContainer = document.getElementById('attachedFilesContainer');
+const chatAttachedFilesContainer = document.getElementById('chatAttachedFilesContainer');
+
+const toggleSearchBtn = document.getElementById('toggleSearchBtn');
+const toggleSandboxBtn = document.getElementById('toggleSandboxBtn');
+const chatToggleSearchBtn = document.getElementById('chatToggleSearchBtn');
+const chatToggleSandboxBtn = document.getElementById('chatToggleSandboxBtn');
+
+const settingsOverlay = document.getElementById('settingsOverlay');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const btnCancelSettings = document.getElementById('btnCancelSettings');
+const btnSaveSettings = document.getElementById('btnSaveSettings');
+
+const chkUnlockVideo = document.getElementById('chkUnlockVideo');
+const chkUnlimitedUse = document.getElementById('chkUnlimitedUse');
+const txtPuterToken = document.getElementById('txtPuterToken');
+const txtOpenAIBearer = document.getElementById('txtOpenAIBearer');
+const txtAnthropicBearer = document.getElementById('txtAnthropicBearer');
+const txtGeminiBearer = document.getElementById('txtGeminiBearer');
+const txtXaiBearer = document.getElementById('txtXaiBearer');
+const txtCustomGateway = document.getElementById('txtCustomGateway');
+const btnResetGateway = document.getElementById('btnResetGateway');
+const capabilitiesTableBody = document.getElementById('capabilitiesTableBody');
+
+const chkTelegramEnabled = document.getElementById('chkTelegramEnabled');
+const txtTelegramBotToken = document.getElementById('txtTelegramBotToken');
+const txtTelegramChannelId = document.getElementById('txtTelegramChannelId');
+const txtTelegramGroupId = document.getElementById('txtTelegramGroupId');
+const txtTelegramThreadId = document.getElementById('txtTelegramThreadId');
+const txtTelegramTemplate = document.getElementById('txtTelegramTemplate');
+const telegramStatusBadge = document.getElementById('telegramStatusBadge');
+const telegramStatusText = document.getElementById('telegramStatusText');
+const btnCopyTelegramCurl = document.getElementById('btnCopyTelegramCurl');
+
+document.addEventListener('DOMContentLoaded', function () {
+    initSettings();
+    loadBuildFolder();
+    renderAgentGrid();
+    selectActiveAgent(activeAgentId);
+    renderCapabilitiesTable();
+    initPuterAuth();
+    bindInterfaceEvents();
+    loadSessionsFromLocalStorage();
+    renderBuildFolderCount();
+    renderBuildFolderList();
+    updateTelegramSummary();
+});
+
+function initSettings() {
+    if (localStorage.getItem(settingsStorageKeys.unlockVideo) === null) localStorage.setItem(settingsStorageKeys.unlockVideo, 'true');
+    if (localStorage.getItem(settingsStorageKeys.unlimitedUse) === null) localStorage.setItem(settingsStorageKeys.unlimitedUse, 'true');
+    if (localStorage.getItem(settingsStorageKeys.telegramEnabled) === null) localStorage.setItem(settingsStorageKeys.telegramEnabled, 'false');
+    if (localStorage.getItem(settingsStorageKeys.telegramTemplate) === null) {
+        localStorage.setItem(settingsStorageKeys.telegramTemplate, '🚀 Build {{file}} selesai\nAgent: {{agent}}\nStatus: {{status}}\nWaktu: {{time}}');
+    }
+
+    chkUnlockVideo.checked = localStorage.getItem(settingsStorageKeys.unlockVideo) !== 'false';
+    chkUnlimitedUse.checked = localStorage.getItem(settingsStorageKeys.unlimitedUse) !== 'false';
+    txtPuterToken.value = localStorage.getItem(settingsStorageKeys.puterToken) || '';
+    txtOpenAIBearer.value = localStorage.getItem(settingsStorageKeys.openai) || '';
+    txtAnthropicBearer.value = localStorage.getItem(settingsStorageKeys.anthropic) || '';
+    txtGeminiBearer.value = localStorage.getItem(settingsStorageKeys.gemini) || '';
+    txtXaiBearer.value = localStorage.getItem(settingsStorageKeys.xai) || '';
+    txtCustomGateway.value = localStorage.getItem(settingsStorageKeys.gateway) || 'https://api.openai.com/v1';
+
+    chkTelegramEnabled.checked = localStorage.getItem(settingsStorageKeys.telegramEnabled) === 'true';
+    txtTelegramBotToken.value = localStorage.getItem(settingsStorageKeys.telegramToken) || '';
+    txtTelegramChannelId.value = localStorage.getItem(settingsStorageKeys.telegramChannel) || '';
+    txtTelegramGroupId.value = localStorage.getItem(settingsStorageKeys.telegramGroup) || '';
+    txtTelegramThreadId.value = localStorage.getItem(settingsStorageKeys.telegramThread) || '';
+    txtTelegramTemplate.value = localStorage.getItem(settingsStorageKeys.telegramTemplate) || '';
+
+    updateUIVIPIndicator(chkUnlimitedUse.checked);
+}
+
+function updateUIVIPIndicator(isUnlimited) {
+    if (isUnlimited) {
+        userStatusText.innerHTML = 'Agent Mode • <span style="color: var(--color-sand); font-weight: 700;">VIP Unlimited</span>';
+        userStatusText.classList.add('pulse');
+    } else {
+        userStatusText.innerHTML = 'Agent Mode • Free';
+        userStatusText.classList.remove('pulse');
+    }
+}
+
+function updateTelegramSummary() {
+    const isEnabled = chkTelegramEnabled.checked;
+    const hasToken = txtTelegramBotToken.value.trim();
+    const hasChannel = txtTelegramChannelId.value.trim();
+    const hasGroup = txtTelegramGroupId.value.trim();
+
+    if (isEnabled && hasToken && (hasChannel || hasGroup)) {
+        telegramStatusBadge.textContent = 'READY';
+        telegramStatusBadge.style.backgroundColor = '#10b981';
+        telegramStatusText.innerHTML = `Bot tersimpan. Channel: <strong>${sanitizeInline(hasChannel || '-')}</strong> • Group: <strong>${sanitizeInline(hasGroup || '-')}</strong>${txtTelegramThreadId.value ? ' • Thread: <strong>' + sanitizeInline(txtTelegramThreadId.value) + '</strong>' : ''}`;
+    } else if (isEnabled) {
+        telegramStatusBadge.textContent = 'PARTIAL';
+        telegramStatusBadge.style.backgroundColor = '#f59e0b';
+        telegramStatusText.textContent = 'Telegram aktif, tetapi token atau target channel/group belum lengkap.';
+    } else {
+        telegramStatusBadge.textContent = 'LOCAL READY';
+        telegramStatusBadge.style.backgroundColor = 'var(--color-sand)';
+        telegramStatusText.textContent = 'Integrasi Telegram belum diaktifkan. Simpan token dan target untuk dipakai saat deploy.';
+    }
+}
+
+function sanitizeInline(value) {
+    return String(value || '').replace(/[<>]/g, '');
+}
+
+function openSettings() {
+    closeLeaderboard();
+    closeBuildFolder();
+    settingsOverlay.classList.add('active');
+    navSettingsBtn.classList.add('active');
+    navAgentModeBtn.classList.remove('active');
+    navLeaderboardBtn.classList.remove('active');
+    renderCapabilitiesTable();
+    updateTelegramSummary();
+}
+
+function closeSettings() {
+    settingsOverlay.classList.remove('active');
+    navSettingsBtn.classList.remove('active');
+    navAgentModeBtn.classList.add('active');
+}
+
+function saveSettings() {
+    localStorage.setItem(settingsStorageKeys.unlockVideo, String(chkUnlockVideo.checked));
+    localStorage.setItem(settingsStorageKeys.unlimitedUse, String(chkUnlimitedUse.checked));
+    localStorage.setItem(settingsStorageKeys.puterToken, txtPuterToken.value.trim());
+    localStorage.setItem(settingsStorageKeys.openai, txtOpenAIBearer.value.trim());
+    localStorage.setItem(settingsStorageKeys.anthropic, txtAnthropicBearer.value.trim());
+    localStorage.setItem(settingsStorageKeys.gemini, txtGeminiBearer.value.trim());
+    localStorage.setItem(settingsStorageKeys.xai, txtXaiBearer.value.trim());
+    localStorage.setItem(settingsStorageKeys.gateway, txtCustomGateway.value.trim() || 'https://api.openai.com/v1');
+    localStorage.setItem(settingsStorageKeys.telegramEnabled, String(chkTelegramEnabled.checked));
+    localStorage.setItem(settingsStorageKeys.telegramToken, txtTelegramBotToken.value.trim());
+    localStorage.setItem(settingsStorageKeys.telegramChannel, txtTelegramChannelId.value.trim());
+    localStorage.setItem(settingsStorageKeys.telegramGroup, txtTelegramGroupId.value.trim());
+    localStorage.setItem(settingsStorageKeys.telegramThread, txtTelegramThreadId.value.trim());
+    localStorage.setItem(settingsStorageKeys.telegramTemplate, txtTelegramTemplate.value.trim());
+
+    updateUIVIPIndicator(chkUnlimitedUse.checked);
+    renderAgentGrid();
+    renderCapabilitiesTable();
+    updateTelegramSummary();
+    alert('⚙️ Pengaturan berhasil disimpan.');
+    closeSettings();
+}
+
+function renderCapabilitiesTable() {
+    capabilitiesTableBody.innerHTML = '';
+    const isVideoUnlocked = chkUnlockVideo.checked;
+    const isUnlimited = chkUnlimitedUse.checked;
+
+    puterAgentsList.forEach(agent => {
+        const tr = document.createElement('tr');
+        const hasVideo = isVideoUnlocked || ['sora', 'kling', 'runway', 'veo', 'luma'].includes(agent.id);
+        const videoStatusHtml = hasVideo
+            ? '<span style="color:#4ade80;font-weight:600;">🎬 Ready</span>'
+            : '<span style="color:var(--color-muted);">Text / Tooling</span>';
+        const usageLimitHtml = isUnlimited
+            ? '<strong style="color:var(--color-sand);">∞ Unlimited VIP</strong>'
+            : '<span>100 requests/day</span>';
+
+        tr.innerHTML = `
+            <td><code>${agent.id}</code></td>
+            <td><strong>${agent.name}</strong></td>
+            <td>${agent.provider}</td>
+            <td>${videoStatusHtml}</td>
+            <td>${usageLimitHtml}</td>
+            <td><a class="table-key-link" href="${agent.keyUrl}" target="_blank" rel="noopener noreferrer" title="Buat API key ${agent.provider}">🔑</a></td>
+        `;
+        capabilitiesTableBody.appendChild(tr);
+    });
+}
+
+function renderAgentGrid() {
+    agentGrid.innerHTML = '';
+    const isUnlimited = localStorage.getItem(settingsStorageKeys.unlimitedUse) !== 'false';
+    const isVideoUnlocked = localStorage.getItem(settingsStorageKeys.unlockVideo) !== 'false';
+
+    puterAgentsList.forEach(agent => {
+        const card = document.createElement('div');
+        card.className = `agent-card ${agent.id === activeAgentId ? 'active' : ''}`;
+        card.setAttribute('data-agent-id', agent.id);
+
+        const toolsHtml = agent.tools.map(tool => `<span class="agent-tool-tag">${tool}</span>`).join('');
+        const unlockedTag = isVideoUnlocked && ['sora', 'kling', 'runway', 'veo', 'luma'].includes(agent.id)
+            ? '<span class="agent-tool-tag" style="background-color: rgba(139, 92, 246, 0.15); color: #c084fc; border-color: rgba(139, 92, 246, 0.3);">🎬 Video Ready</span>'
+            : '';
+        const badgeText = isUnlimited ? '🔓 UNLIMITED' : agent.badge;
+
+        card.innerHTML = `
+            <div class="agent-card-header">
+                <div class="agent-card-identity">
+                    <div class="agent-card-icon" style="color:${agent.color};">${agent.icon}</div>
+                    <div style="display:flex;flex-direction:column;gap:4px;min-width:0;">
+                        <span class="agent-card-name">${agent.name}</span>
+                        <span class="agent-provider-pill">${agent.provider}</span>
+                    </div>
+                </div>
+                <div class="agent-card-links">
+                    <a class="agent-api-link" href="${agent.keyUrl}" target="_blank" rel="noopener noreferrer" title="Buat API key ${agent.provider}" onclick="event.stopPropagation()">🔑</a>
+                    <span class="agent-card-badge" style="${isUnlimited ? 'background-color: var(--color-sand-muted); color: var(--color-sand); border: 1px solid rgba(223, 159, 40, 0.3);' : ''}">${badgeText}</span>
+                </div>
+            </div>
+            <p class="agent-card-desc">${agent.description}</p>
+            <div class="agent-card-tools">${toolsHtml}${unlockedTag}</div>
+        `;
+        card.addEventListener('click', () => selectActiveAgent(agent.id));
+        agentGrid.appendChild(card);
+    });
+}
+
+function selectActiveAgent(agentId) {
+    activeAgentId = agentId;
+    const selectedAgent = puterAgentsList.find(agent => agent.id === agentId) || puterAgentsList[0];
+    currentWorkspaceAgent.textContent = `Agent Mode (${selectedAgent.name})`;
+    chatActiveAgentBadge.textContent = `Active Agent: ${selectedAgent.name}`;
+    document.querySelectorAll('.agent-card').forEach(card => {
+        card.classList.toggle('active', card.getAttribute('data-agent-id') === agentId);
+    });
+}
+
+async function initPuterAuth() {
+    if (typeof puter === 'undefined') {
+        authDot.style.backgroundColor = '#ef4444';
+        authStatusText.innerHTML = 'Puter.js tidak termuat di preview offline. File tetap siap dipakai setelah dibuka di browser dengan internet.';
+        sidebarAuthBtn.style.display = 'none';
+        return;
+    }
+
+    try {
+        setAuthenticatedState(Boolean(puter.auth.isSignedIn()));
+    } catch (error) {
+        console.error('Error checking Puter auth:', error);
+        setAuthenticatedState(false);
+    }
+}
+
+function setAuthenticatedState(isAuthenticated) {
+    const card = document.getElementById('authStatusCard');
+    if (isAuthenticated) {
+        card.classList.add('authenticated');
+        authDot.style.backgroundColor = '#10b981';
+        authStatusText.innerHTML = 'Authenticated successfully! Puter fallback siap dipakai untuk multi-agent routing.';
+        sidebarAuthBtn.textContent = '✅ Authenticated';
+        sidebarAuthBtn.style.backgroundColor = '#10b981';
+        sidebarAuthBtn.style.color = '#fff';
+        sidebarAuthBtn.disabled = true;
+        if (typeof puter !== 'undefined' && puter.auth?.getUser) {
+            puter.auth.getUser().then(user => {
+                if (user && user.username) {
+                    userNameText.textContent = user.username;
+                    userAvatar.textContent = user.username.charAt(0).toUpperCase();
+                }
+            }).catch(() => {});
+        }
+    } else {
+        card.classList.remove('authenticated');
+        authDot.style.backgroundColor = '#f59e0b';
+        authStatusText.innerHTML = 'Klik autentikasi jika ingin memakai Puter sebagai fallback multi-model.';
+        sidebarAuthBtn.textContent = '🔐 Authenticate with Puter';
+        sidebarAuthBtn.style.backgroundColor = 'var(--color-sand)';
+        sidebarAuthBtn.style.color = 'var(--bg-darkest)';
+        sidebarAuthBtn.disabled = false;
+    }
+}
+
+async function handlePuterAuthClick() {
+    if (typeof puter === 'undefined') return;
+    sidebarAuthBtn.textContent = '🔄 Opening popup...';
+    try {
+        const response = await puter.ai.chat('Hello Puter', { model: 'gpt-4o' });
+        if (response) setAuthenticatedState(true);
+    } catch (error) {
+        console.error('Puter auth failed:', error);
+        alert('Autentikasi Puter gagal atau popup ditutup. Coba izinkan popup lalu ulangi.');
+        setAuthenticatedState(false);
+    }
+}
+
+function bindInterfaceEvents() {
+    menuToggleBtn.addEventListener('click', () => sidebar.classList.add('open'));
+    sidebarCloseBtn.addEventListener('click', () => sidebar.classList.remove('open'));
+    newChatBtn.addEventListener('click', triggerNewSession);
+    sidebarAuthBtn.addEventListener('click', handlePuterAuthClick);
+
+    navAgentModeBtn.addEventListener('click', () => {
+        closeLeaderboard();
+        closeBuildFolder();
+        closeSettings();
+        sidebar.classList.remove('open');
+    });
+    navLeaderboardBtn.addEventListener('click', openLeaderboard);
+    headerLeaderboardBtn.addEventListener('click', openLeaderboard);
+    closeLeaderboardBtn.addEventListener('click', closeLeaderboard);
+
+    navSettingsBtn.addEventListener('click', () => {
+        openSettings();
+        sidebar.classList.remove('open');
+    });
+    closeSettingsBtn.addEventListener('click', closeSettings);
+    btnCancelSettings.addEventListener('click', closeSettings);
+    btnSaveSettings.addEventListener('click', saveSettings);
+
+    headerBuildFolderBtn.addEventListener('click', openBuildFolder);
+    closeBuildFolderBtn.addEventListener('click', closeBuildFolder);
+    btnClearBuildFolder.addEventListener('click', clearBuildFolder);
+    btnExportBuildManifest.addEventListener('click', exportBuildManifest);
+    btnResetGateway.addEventListener('click', () => { txtCustomGateway.value = 'https://api.openai.com/v1'; });
+    btnCopyTelegramCurl.addEventListener('click', copyTelegramCurlCommand);
+
+    [toggleSearchBtn, toggleSandboxBtn, chatToggleSearchBtn, chatToggleSandboxBtn].forEach(btn => {
+        btn.addEventListener('click', function () { this.classList.toggle('active'); });
+    });
+
+    [mainPromptArea, chatPromptArea].forEach(textarea => {
+        textarea.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 180) + 'px';
+        });
+        textarea.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                if (textarea === mainPromptArea) submitWelcomePrompt();
+                else submitChatPrompt();
+            }
+        });
+    });
+
+    mainSendBtn.addEventListener('click', submitWelcomePrompt);
+    chatSendBtn.addEventListener('click', submitChatPrompt);
+
+    document.querySelectorAll('.settings-tab-btn').forEach(tabBtn => {
+        tabBtn.addEventListener('click', function () {
+            document.querySelectorAll('.settings-tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.settings-tab-content').forEach(content => content.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById(this.getAttribute('data-tab')).classList.add('active');
+        });
+    });
+
+    document.querySelectorAll('.template-card').forEach(card => {
+        card.addEventListener('click', function () {
+            mainPromptArea.value = this.getAttribute('data-prompt');
+            mainPromptArea.focus();
+            mainPromptArea.dispatchEvent(new Event('input'));
+        });
+    });
+
+    uploadFileBtn.addEventListener('click', () => fileInputHidden.click());
+    chatUploadFileBtn.addEventListener('click', () => fileInputHidden.click());
+    fileInputHidden.addEventListener('change', handleFileSelection);
+
+    [settingsOverlay, leaderboardOverlay, buildFolderOverlay].forEach(overlay => {
+        overlay.addEventListener('click', function (event) {
+            if (event.target !== overlay) return;
+            if (overlay === settingsOverlay) closeSettings();
+            if (overlay === leaderboardOverlay) closeLeaderboard();
+            if (overlay === buildFolderOverlay) closeBuildFolder();
+        });
+    });
+
+    [chkTelegramEnabled, txtTelegramBotToken, txtTelegramChannelId, txtTelegramGroupId, txtTelegramThreadId, txtTelegramTemplate].forEach(el => {
+        el.addEventListener('input', updateTelegramSummary);
+        el.addEventListener('change', updateTelegramSummary);
+    });
+}
+
+function openLeaderboard() {
+    closeSettings();
+    closeBuildFolder();
+    leaderboardOverlay.classList.add('active');
+    navLeaderboardBtn.classList.add('active');
+    navAgentModeBtn.classList.remove('active');
+    navSettingsBtn.classList.remove('active');
+}
+
+function closeLeaderboard() {
+    leaderboardOverlay.classList.remove('active');
+    navLeaderboardBtn.classList.remove('active');
+    if (!settingsOverlay.classList.contains('active')) navAgentModeBtn.classList.add('active');
+}
+
+function openBuildFolder() {
+    closeLeaderboard();
+    closeSettings();
+    buildFolderOverlay.classList.add('active');
+    renderBuildFolderList();
+}
+
+function closeBuildFolder() {
+    buildFolderOverlay.classList.remove('active');
+}
+
+function loadBuildFolder() {
+    const stored = localStorage.getItem(settingsStorageKeys.buildFolder);
+    if (!stored) {
+        buildFolderFiles = [];
+        return;
+    }
+    try {
+        buildFolderFiles = JSON.parse(stored);
+    } catch (error) {
+        console.error('Failed to parse build folder:', error);
+        buildFolderFiles = [];
+    }
+}
+
+function persistBuildFolder() {
+    localStorage.setItem(settingsStorageKeys.buildFolder, JSON.stringify(buildFolderFiles));
+    renderBuildFolderCount();
+    renderBuildFolderList();
+}
+
+function renderBuildFolderCount() {
+    buildFolderCount.textContent = String(buildFolderFiles.length);
+}
+
+function renderBuildFolderList() {
+    buildFilesList.innerHTML = '';
+    if (!buildFolderFiles.length) {
+        buildFilesList.innerHTML = '<div class="folder-empty">Belum ada file di Build Folder.<br>Simpan artifact code dari chat menggunakan tombol <strong>Save to Build</strong>.</div>';
+        return;
+    }
+
+    buildFolderFiles.slice().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).forEach(file => {
+        const item = document.createElement('div');
+        item.className = 'build-file-item';
+        item.innerHTML = `
+            <div class="build-file-main">
+                <div class="build-file-name">${escapeHtml(file.name)}</div>
+                <div class="build-file-meta">
+                    <span>${escapeHtml(String(file.language).toUpperCase())}</span>
+                    <span>${formatBytes(file.size || 0)}</span>
+                    <span>${new Date(file.updatedAt).toLocaleString()}</span>
+                </div>
+            </div>
+            <div class="build-file-actions">
+                <button class="folder-action-btn" data-action="preview" data-id="${file.id}">Preview</button>
+                <button class="folder-action-btn" data-action="copy" data-id="${file.id}">Copy</button>
+                <button class="folder-action-btn" data-action="download" data-id="${file.id}">Download</button>
+                <button class="folder-action-btn" data-action="delete" data-id="${file.id}">Delete</button>
+            </div>
+        `;
+        buildFilesList.appendChild(item);
+    });
+
+    buildFilesList.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            const action = btn.getAttribute('data-action');
+            if (action === 'preview') previewBuildFile(id);
+            if (action === 'copy') copyBuildFile(id);
+            if (action === 'download') downloadBuildFile(id);
+            if (action === 'delete') deleteBuildFile(id);
+        });
+    });
+}
+
+function saveArtifactToBuild(code, lang) {
+    const extension = extensionFromLanguage(lang);
+    const suggestedName = `artifact-${Date.now()}.${extension}`;
+    const fileName = window.prompt('Nama file untuk Build Folder:', suggestedName);
+    if (!fileName) return;
+    const normalizedName = fileName.trim();
+    const existingIndex = buildFolderFiles.findIndex(file => file.name === normalizedName);
+    const payload = {
+        id: existingIndex >= 0 ? buildFolderFiles[existingIndex].id : `build_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        name: normalizedName,
+        language: lang || 'txt',
+        size: new Blob([code]).size,
+        content: code,
+        updatedAt: new Date().toISOString()
+    };
+    if (existingIndex >= 0) buildFolderFiles.splice(existingIndex, 1, payload);
+    else buildFolderFiles.unshift(payload);
+    persistBuildFolder();
+    alert(`📁 ${normalizedName} disimpan ke Build Folder.`);
+}
+
+function clearBuildFolder() {
+    if (!buildFolderFiles.length) return;
+    if (!window.confirm('Hapus semua file di Build Folder?')) return;
+    buildFolderFiles = [];
+    persistBuildFolder();
+}
+
+function exportBuildManifest() {
+    const manifest = {
+        exportedAt: new Date().toISOString(),
+        totalFiles: buildFolderFiles.length,
+        files: buildFolderFiles.map(file => ({
+            name: file.name,
+            language: file.language,
+            size: file.size,
+            updatedAt: file.updatedAt
+        }))
+    };
+    downloadTextFile('build-folder-manifest.json', JSON.stringify(manifest, null, 2), 'application/json');
+}
+
+function previewBuildFile(fileId) {
+    const file = buildFolderFiles.find(entry => entry.id === fileId);
+    if (!file) return;
+    const type = file.name.endsWith('.html') ? 'text/html' : 'text/plain';
+    const blob = new Blob([file.content], { type });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+}
+
+function copyBuildFile(fileId) {
+    const file = buildFolderFiles.find(entry => entry.id === fileId);
+    if (!file) return;
+    navigator.clipboard.writeText(file.content).then(() => alert(`📋 ${file.name} copied.`));
+}
+
+function downloadBuildFile(fileId) {
+    const file = buildFolderFiles.find(entry => entry.id === fileId);
+    if (!file) return;
+    downloadTextFile(file.name, file.content, 'text/plain');
+}
+
+function deleteBuildFile(fileId) {
+    const file = buildFolderFiles.find(entry => entry.id === fileId);
+    if (!file) return;
+    if (!window.confirm(`Hapus ${file.name} dari Build Folder?`)) return;
+    buildFolderFiles = buildFolderFiles.filter(entry => entry.id !== fileId);
+    persistBuildFolder();
+}
+
+function copyTelegramCurlCommand() {
+    const token = txtTelegramBotToken.value.trim() || '<BOT_TOKEN>';
+    const chatId = txtTelegramChannelId.value.trim() || txtTelegramGroupId.value.trim() || '<CHAT_ID>';
+    const thread = txtTelegramThreadId.value.trim();
+    const message = (txtTelegramTemplate.value.trim() || '🚀 Build {{file}} selesai').replace(/\n/g, '\\n');
+    const threadPart = thread ? ` --data-urlencode "message_thread_id=${thread}"` : '';
+    const curl = `curl -X POST "https://api.telegram.org/bot${token}/sendMessage" --data-urlencode "chat_id=${chatId}" --data-urlencode "text=${message}"${threadPart}`;
+    navigator.clipboard.writeText(curl).then(() => alert('Perintah CURL Telegram berhasil disalin.'));
+}
+
+function handleFileSelection(event) {
+    if (event.target.files.length > 0) processFiles(event.target.files);
+}
+
+function processFiles(filesList) {
+    for (let i = 0; i < filesList.length; i += 1) {
+        const file = filesList[i];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            attachedFiles.push({
+                name: file.name,
+                size: (file.size / 1024).toFixed(1) + ' KB',
+                content: e.target.result,
+                id: 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
+            });
+            renderAttachedFiles();
+        };
+
+        if (file.type.match('text.*') || file.name.match(/\.(js|py|html|css|json|csv|sql|sh|md|txt)$/i)) {
+            reader.readAsText(file);
+        } else {
+            attachedFiles.push({
+                name: file.name,
+                size: (file.size / 1024).toFixed(1) + ' KB',
+                content: `[Binary file content for ${file.name} ignored. Filename used for reference]`,
+                id: 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)
+            });
+            renderAttachedFiles();
+        }
+    }
+}
+
+function renderAttachedFiles() {
+    [attachedFilesContainer, chatAttachedFilesContainer].forEach(container => {
+        container.innerHTML = '';
+        if (!attachedFiles.length) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = 'flex';
+        attachedFiles.forEach(file => {
+            const badge = document.createElement('div');
+            badge.className = 'attached-file-badge';
+            badge.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span><strong>${escapeHtml(file.name)}</strong> (${file.size})</span>
+                <button class="remove-file-btn" onclick="removeAttachedFile('${file.id}')" title="Hapus file">&times;</button>
+            `;
+            container.appendChild(badge);
+        });
+    });
+}
+
+window.removeAttachedFile = function (fileId) {
+    attachedFiles = attachedFiles.filter(file => file.id !== fileId);
+    renderAttachedFiles();
+};
+
+function submitWelcomePrompt() {
+    const message = mainPromptArea.value.trim();
+    if (!message || isStreaming) return;
+    startNewSession(message);
+    mainPromptArea.value = '';
+    mainPromptArea.style.height = 'auto';
+    executeAgentResponse(message);
+}
+
+function submitChatPrompt() {
+    const message = chatPromptArea.value.trim();
+    if (!message || isStreaming) return;
+    chatPromptArea.value = '';
+    chatPromptArea.style.height = 'auto';
+    executeAgentResponse(message);
+}
+
+function startNewSession(firstPrompt) {
+    activeSessionId = 'session_' + Date.now();
+    const title = firstPrompt.length > 42 ? firstPrompt.slice(0, 42) + '...' : firstPrompt;
+    const newSession = {
+        id: activeSessionId,
+        title,
+        agentId: activeAgentId,
+        history: [],
+        timestamp: new Date().toLocaleString()
+    };
+    recentSessions.unshift(newSession);
+    saveSessionsToLocalStorage();
+    renderRecentSessions();
+    welcomePanel.style.display = 'none';
+    chatPanel.classList.add('active');
+    chatMessagesContainer.innerHTML = '';
+}
+
+function triggerNewSession() {
+    activeSessionId = null;
+    chatHistory = [];
+    attachedFiles = [];
+    renderAttachedFiles();
+    welcomePanel.style.display = 'flex';
+    chatPanel.classList.remove('active');
+    activeThinkingTerminal.style.display = 'none';
+    mainPromptArea.value = '';
+    mainPromptArea.style.height = 'auto';
+    mainPromptArea.focus();
+    renderRecentSessions();
+}
+
+function loadSessionsFromLocalStorage() {
+    const stored = localStorage.getItem(settingsStorageKeys.sessions);
+    if (!stored) return;
+    try {
+        recentSessions = JSON.parse(stored);
+        renderRecentSessions();
+    } catch (error) {
+        console.error('Error parsing sessions:', error);
+    }
+}
+
+function saveSessionsToLocalStorage() {
+    localStorage.setItem(settingsStorageKeys.sessions, JSON.stringify(recentSessions));
+}
+
+function renderRecentSessions() {
+    recentConversationsList.innerHTML = '';
+    if (!recentSessions.length) {
+        recentConversationsList.innerHTML = '<div style="font-style: italic; color: var(--color-muted); text-align: center; padding: 12px 0; font-size: 13px;">No recent sessions</div>';
+        return;
+    }
+
+    recentSessions.forEach(session => {
+        const item = document.createElement('div');
+        item.className = `convo-item ${session.id === activeSessionId ? 'active' : ''}`;
+        item.textContent = session.title;
+        item.title = `Agent: ${session.agentId} | ${session.timestamp}`;
+        item.addEventListener('click', () => openSession(session.id));
+        recentConversationsList.appendChild(item);
+    });
+}
+
+function openSession(sessionId) {
+    const session = recentSessions.find(entry => entry.id === sessionId);
+    if (!session) return;
+    activeSessionId = sessionId;
+    activeAgentId = session.agentId;
+    chatHistory = [...session.history];
+    selectActiveAgent(activeAgentId);
+    welcomePanel.style.display = 'none';
+    chatPanel.classList.add('active');
+    activeThinkingTerminal.style.display = 'none';
+    chatMessagesContainer.innerHTML = '';
+    chatHistory.forEach(msg => renderMessageBubble(msg.displayContent || msg.content, msg.role));
+    renderRecentSessions();
+    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}
+
+async function executeAgentResponse(userText) {
+    if (isStreaming) return;
+
+    const activeAgent = puterAgentsList.find(agent => agent.id === activeAgentId) || puterAgentsList[0];
+    let fullPrompt = userText;
+    if (attachedFiles.length) {
+        const contextHeader = attachedFiles.map(file => `--- FILE START: ${file.name} ---\n${file.content}\n--- FILE END ---`).join('\n\n');
+        fullPrompt = `Here is the content of the attached context files:\n${contextHeader}\n\nUser prompt:\n${userText}`;
+    }
+
+    renderMessageBubble(userText, 'user');
+    chatHistory.push({ role: 'user', content: fullPrompt, displayContent: userText });
+    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+
+    const generateVideoOutput = (localStorage.getItem(settingsStorageKeys.unlockVideo) !== 'false') && detectVideoIntent(activeAgent, userText);
+
+    showThinkingTerminal(activeAgent.name);
+    await appendThinkingStep('Evaluating query complexity with selected frontier agent...');
+    if (attachedFiles.length) await appendThinkingStep(`Loaded ${attachedFiles.length} attached context file(s).`);
+    if (toggleSearchBtn.classList.contains('active') || chatToggleSearchBtn.classList.contains('active')) {
+        await appendThinkingStep('Web Search mode is enabled.');
+    }
+    if (toggleSandboxBtn.classList.contains('active') || chatToggleSandboxBtn.classList.contains('active')) {
+        await appendThinkingStep('Sandbox runtime prepared for code and build tasks.');
+    }
+    if (localStorage.getItem(settingsStorageKeys.unlimitedUse) !== 'false') {
+        await appendThinkingStep('🔓 VIP Unlimited profile active.');
+    }
+    if (localStorage.getItem(settingsStorageKeys.telegramEnabled) === 'true') {
+        await appendThinkingStep('📨 Telegram routing settings detected for channel/group workflow.');
+    }
+    if (generateVideoOutput) {
+        await appendThinkingStep(`🎬 Video generation mode armed for ${activeAgent.name}.`);
+    }
+
+    setInputStates(false);
+
+    try {
+        isStreaming = true;
+        const { bubbleElement } = renderMessageBubble('', 'assistant');
+        hideThinkingTerminal();
+        let completeText = '';
+
+        const route = resolveCompatibleRoute(activeAgent);
+        if (route) {
+            for await (const chunk of createOpenAICompatibleStream(route.baseUrl, route.apiKey, route.model, buildConversation(activeAgent))) {
+                if (chunk?.text) {
+                    completeText += chunk.text;
+                    renderFormattedAgentText(completeText, bubbleElement);
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                }
+            }
+        } else {
+            if (activeAgent.providerType === 'anthropic' && localStorage.getItem(settingsStorageKeys.anthropic)) {
+                await appendThinkingStep('Anthropic key terdeteksi. Saat ini request tetap lewat Puter fallback untuk stabilitas UI.');
+            }
+            if (activeAgent.providerType === 'google' && localStorage.getItem(settingsStorageKeys.gemini)) {
+                await appendThinkingStep('Google key terdeteksi. Saat ini request tetap lewat Puter fallback untuk stabilitas UI.');
+            }
+            if (typeof puter === 'undefined') {
+                throw new Error('Puter.js belum tersedia di preview ini dan tidak ada direct route yang cocok.');
+            }
+            const streamResponse = await puter.ai.chat(buildConversation(activeAgent), {
+                model: activeAgent.model,
+                stream: true
+            });
+            for await (const chunk of streamResponse) {
+                if (chunk?.text) {
+                    completeText += chunk.text;
+                    renderFormattedAgentText(completeText, bubbleElement);
+                    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+                }
+            }
+        }
+
+        renderFormattedAgentText(completeText, bubbleElement);
+        if (generateVideoOutput) appendVideoPreview(userText, bubbleElement, activeAgent.name);
+
+        chatHistory.push({ role: 'assistant', content: completeText });
+        const activeSession = recentSessions.find(entry => entry.id === activeSessionId);
+        if (activeSession) {
+            activeSession.history = [...chatHistory];
+            saveSessionsToLocalStorage();
+        }
+
+        attachedFiles = [];
+        renderAttachedFiles();
+    } catch (error) {
+        console.error('Error streaming agent output:', error);
+        hideThinkingTerminal();
+        let errorMsg = error.message || 'Unknown error occurred.';
+        if (/auth|unauthorized|authentication/i.test(errorMsg)) {
+            errorMsg = 'Authentication required. Silakan autentikasi Puter atau isi API key sesuai provider agent.';
+            setAuthenticatedState(false);
+        }
+        renderMessageBubble(`Encountered error: ${errorMsg}`, 'assistant', true);
+        if (chatHistory.length && chatHistory[chatHistory.length - 1].role === 'user') chatHistory.pop();
+    } finally {
+        isStreaming = false;
+        setInputStates(true);
+        chatPromptArea.focus();
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }
+}
+
+function buildConversation(activeAgent) {
+    return [{ role: 'system', content: activeAgent.systemPrompt }, ...chatHistory.map(msg => ({ role: msg.role, content: msg.content }))];
+}
+
+function resolveCompatibleRoute(activeAgent) {
+    const openaiKey = localStorage.getItem(settingsStorageKeys.openai) || '';
+    const xaiKey = localStorage.getItem(settingsStorageKeys.xai) || '';
+    const gateway = (localStorage.getItem(settingsStorageKeys.gateway) || 'https://api.openai.com/v1').replace(/\/$/, '');
+
+    if ((activeAgent.id === 'max' || activeAgent.providerType === 'openai') && openaiKey) {
+        return {
+            baseUrl: gateway,
+            apiKey: openaiKey,
+            model: activeAgent.id === 'gpt' ? 'gpt-4o' : 'gpt-4o'
+        };
+    }
+
+    if (activeAgent.providerType === 'xai' && xaiKey) {
+        return {
+            baseUrl: 'https://api.x.ai/v1',
+            apiKey: xaiKey,
+            model: 'grok-4'
+        };
+    }
+
+    return null;
+}
+
+async function* createOpenAICompatibleStream(baseUrl, apiKey, model, messages) {
+    const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ model, messages, stream: true })
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gateway responded with status ${response.status}: ${errText}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+            const cleaned = line.trim();
+            if (!cleaned || cleaned === 'data: [DONE]') continue;
+            if (!cleaned.startsWith('data: ')) continue;
+            try {
+                const json = JSON.parse(cleaned.slice(6));
+                const text = json.choices?.[0]?.delta?.content;
+                if (text) yield { text };
+            } catch (error) {
+                console.warn('Skipping non-JSON SSE chunk', error);
+            }
+        }
+    }
+}
+
+function detectVideoIntent(activeAgent, userText) {
+    const text = userText.toLowerCase();
+    return ['sora', 'kling', 'runway', 'veo', 'luma'].includes(activeAgent.id)
+        || /video|render|buat video|bikin video|motion|cinematic|animasi|storyboard|shot list/.test(text);
+}
+
+function appendVideoPreview(userText, bubbleElement, agentName) {
+    let videoSourceUrl = 'https://assets.mixkit.co/videos/preview/mixkit-stars-in-space-background-1611-large.mp4';
+    const lower = userText.toLowerCase();
+    if (/water|sea|ocean|pantai|laut/.test(lower)) {
+        videoSourceUrl = 'https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-and-sea-foam-43224-large.mp4';
+    } else if (/city|kota|cyberpunk|street/.test(lower)) {
+        videoSourceUrl = 'https://assets.mixkit.co/videos/preview/mixkit-time-lapse-of-a-city-at-night-41561-large.mp4';
+    } else if (/nature|forest|hutan|pohon/.test(lower)) {
+        videoSourceUrl = 'https://assets.mixkit.co/videos/preview/mixkit-forest-stream-in-the-sunlight-529-large.mp4';
+    }
+
+    const videoContainer = document.createElement('div');
+    videoContainer.className = 'custom-video-rendered';
+    videoContainer.style.marginTop = '15px';
+    videoContainer.style.border = '1px solid var(--color-sand)';
+    videoContainer.style.borderRadius = '8px';
+    videoContainer.style.overflow = 'hidden';
+    videoContainer.style.backgroundColor = '#000';
+    videoContainer.style.position = 'relative';
+    videoContainer.style.boxShadow = '0 8px 24px rgba(0,0,0,0.6)';
+
+    videoContainer.innerHTML = `
+        <div style="padding: 10px; background: rgba(11,11,10,0.85); color: var(--color-sand); font-size: 11px; font-weight: bold; position: absolute; top:0; left:0; right:0; z-index: 10; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(223, 159, 40, 0.2); backdrop-filter: blur(4px);">
+            <span>🎬 ${agentName.toUpperCase()} VIDEO ENGINE</span>
+            <span style="background: var(--color-sand); color: var(--bg-darkest); padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 800;">PREVIEW</span>
+        </div>
+        <video width="100%" height="auto" controls autoplay loop muted style="display: block; max-height: 400px; object-fit: cover;">
+            <source src="${videoSourceUrl}" type="video/mp4">
+        </video>
+        <div style="padding: 14px; background: var(--bg-darker); border-top: 1px solid var(--border-color); text-align: left;">
+            <p style="font-size: 13px; font-weight: 600; color: var(--color-cream); margin-bottom: 4px;">Scene Prompt: <span style="font-weight:500;color:var(--color-sand);font-style:italic;">${escapeHtml(userText.length > 70 ? userText.slice(0, 70) + '...' : userText)}</span></p>
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
+                <span style="font-size:11px;color:var(--color-muted);">🎥 Aspect Ratio: 16:9</span>
+                <span style="font-size:11px;color:var(--color-muted);">🔥 Frame Rate: 60 FPS</span>
+                <span style="font-size:11px;color:var(--color-muted);">⚡ Render Queue: Simulated Preview</span>
+            </div>
+        </div>
+    `;
+    bubbleElement.appendChild(videoContainer);
+}
+
+function renderMessageBubble(content, role, isError = false) {
+    const row = document.createElement('div');
+    row.className = `message-row ${role}`;
+
+    const avatarContainer = document.createElement('div');
+    avatarContainer.className = 'message-avatar-container';
+    const activeAgent = puterAgentsList.find(agent => agent.id === activeAgentId) || puterAgentsList[0];
+    avatarContainer.innerHTML = role === 'user' ? 'U' : activeAgent.icon;
+
+    const body = document.createElement('div');
+    body.className = 'message-body';
+
+    const sender = document.createElement('span');
+    sender.className = 'message-sender';
+    sender.textContent = role === 'user' ? 'You' : activeAgent.name;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    if (isError) {
+        bubble.style.borderColor = '#ef4444';
+        bubble.style.color = '#fca5a5';
+    }
+
+    if (role === 'assistant' && content) renderFormattedAgentText(content, bubble);
+    else bubble.textContent = content;
+
+    body.appendChild(sender);
+    body.appendChild(bubble);
+    row.appendChild(avatarContainer);
+    row.appendChild(body);
+    chatMessagesContainer.appendChild(row);
+    return { bubbleElement: bubble };
+}
+
+function renderFormattedAgentText(rawText, containerElement) {
+    containerElement.innerHTML = '';
+    const codeRegex = /```(\w*)\n([\s\S]*?)```/g;
+    let lastIdx = 0;
+    let match;
+
+    while ((match = codeRegex.exec(rawText)) !== null) {
+        if (match.index > lastIdx) {
+            const textNode = document.createElement('div');
+            textNode.style.whiteSpace = 'pre-wrap';
+            textNode.textContent = rawText.substring(lastIdx, match.index);
+            containerElement.appendChild(textNode);
+        }
+        const language = match[1] || 'text';
+        const codeBody = match[2];
+        containerElement.appendChild(createArtifactCanvas(codeBody.trim(), language.trim()));
+        lastIdx = match.index + match[0].length;
+    }
+
+    if (lastIdx < rawText.length) {
+        const textNode = document.createElement('div');
+        textNode.style.whiteSpace = 'pre-wrap';
+        textNode.textContent = rawText.substring(lastIdx);
+        containerElement.appendChild(textNode);
+    }
+
+    if (!containerElement.children.length && rawText) {
+        const textNode = document.createElement('div');
+        textNode.style.whiteSpace = 'pre-wrap';
+        textNode.textContent = rawText;
+        containerElement.appendChild(textNode);
+    }
+}
+
+function createArtifactCanvas(code, lang) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'artifact-canvas';
+
+    const header = document.createElement('div');
+    header.className = 'artifact-header';
+
+    const titleGrp = document.createElement('div');
+    titleGrp.className = 'artifact-title-group';
+    titleGrp.innerHTML = `<span class="artifact-lang-dot"></span><span class="artifact-title">${lang.toUpperCase()} Sandbox Code</span>`;
+
+    const actions = document.createElement('div');
+    actions.className = 'artifact-actions';
+
+    if (lang.toLowerCase() === 'html' || lang.toLowerCase() === 'svg') {
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'artifact-btn view-btn';
+        viewBtn.textContent = 'Live Preview';
+        viewBtn.addEventListener('click', () => {
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        });
+        actions.appendChild(viewBtn);
+    }
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'artifact-btn';
+    saveBtn.textContent = 'Save to Build';
+    saveBtn.addEventListener('click', () => saveArtifactToBuild(code, lang));
+    actions.appendChild(saveBtn);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'artifact-btn';
+    copyBtn.textContent = 'Copy';
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(code).then(() => {
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1200);
+        });
+    });
+    actions.appendChild(copyBtn);
+
+    const downloadBtn = document.createElement('button');
+    downloadBtn.className = 'artifact-btn';
+    downloadBtn.textContent = 'Download';
+    downloadBtn.addEventListener('click', () => {
+        downloadTextFile(`arena-sandbox-code.${extensionFromLanguage(lang)}`, code, 'text/plain');
+    });
+    actions.appendChild(downloadBtn);
+
+    header.appendChild(titleGrp);
+    header.appendChild(actions);
+
+    const container = document.createElement('div');
+    container.className = 'artifact-code-container';
+    const pre = document.createElement('pre');
+    const codeElement = document.createElement('code');
+    codeElement.textContent = code;
+    pre.appendChild(codeElement);
+    container.appendChild(pre);
+
+    wrapper.appendChild(header);
+    wrapper.appendChild(container);
+    return wrapper;
+}
+
+function showThinkingTerminal(agentName) {
+    thinkingAgentName.textContent = `${agentName} routing steps...`;
+    thinkingStepsLogs.innerHTML = '';
+    activeThinkingTerminal.style.display = 'block';
+    chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+}
+
+function hideThinkingTerminal() {
+    activeThinkingTerminal.style.display = 'none';
+}
+
+function appendThinkingStep(text) {
+    return new Promise(resolve => {
+        const step = document.createElement('div');
+        step.className = 'thinking-step';
+        step.innerHTML = `<div class="thinking-spinner"></div><span>${escapeHtml(text)}</span>`;
+        thinkingStepsLogs.appendChild(step);
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        setTimeout(() => {
+            const spinner = step.querySelector('.thinking-spinner');
+            if (spinner) {
+                spinner.className = '';
+                spinner.textContent = '✓';
+                spinner.style.color = '#84cc16';
+                spinner.style.fontWeight = 'bold';
+                spinner.style.marginRight = '4px';
+            }
+            resolve();
+        }, 600);
+    });
+}
+
+function setInputStates(enabled) {
+    [mainPromptArea, chatPromptArea, mainSendBtn, chatSendBtn, uploadFileBtn, chatUploadFileBtn].forEach(el => {
+        if (!el) return;
+        el.disabled = !enabled;
+        el.style.opacity = enabled ? '1' : '0.5';
+        el.style.pointerEvents = enabled ? 'auto' : 'none';
+    });
+}
+
+function extensionFromLanguage(lang) {
+    const map = {
+        javascript: 'js',
+        js: 'js',
+        python: 'py',
+        py: 'py',
+        html: 'html',
+        css: 'css',
+        json: 'json',
+        csv: 'csv',
+        shell: 'sh',
+        bash: 'sh',
+        sql: 'sql',
+        markdown: 'md',
+        md: 'md',
+        text: 'txt'
+    };
+    return map[String(lang || '').toLowerCase()] || 'txt';
+}
+
+function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function downloadTextFile(filename, content, type) {
+    const blob = new Blob([content], { type });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"1954b47c125f43f8b4338b3c4f804e4f","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
